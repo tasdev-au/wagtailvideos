@@ -21,33 +21,31 @@ Video = get_video_model()
 
 class TracksAdmin(ModelAdmin):
     model = Video.get_track_listing_model()
-    menu_icon = 'openquote'
-    menu_label = 'Text tracks'
+    menu_icon = "openquote"
+    menu_label = "Text tracks"
 
-    list_display = ('__str__', 'track_count')
+    list_display = ("__str__", "track_count")
 
     def track_count(self, track_listing):
         return track_listing.tracks.count()
-    track_count.short_description = 'No. tracks'
 
-    panels = [
-        VideoChooserPanel('video'),
-        InlinePanel('tracks', heading="Tracks")
-    ]
+    track_count.short_description = "No. tracks"
+
+    panels = [VideoChooserPanel("video"), InlinePanel("tracks", heading="Tracks")]
 
 
 if is_modeladmin_installed():
     modeladmin_register(TracksAdmin)
 
 
-@hooks.register('register_admin_urls')
+@hooks.register("register_admin_urls")
 def register_admin_urls():
     return [
-        path('videos/', include(urls)),
+        path("videos/", include(urls)),
     ]
 
 
-@hooks.register('insert_editor_js')
+@hooks.register("insert_editor_js")
 def editor_js():
     return format_html(
         """
@@ -55,11 +53,11 @@ def editor_js():
             window.chooserUrls.videoChooser = '{0}';
         </script>
         """,
-        reverse('wagtailvideos:chooser')
+        reverse("wagtailvideos:chooser"),
     )
 
 
-@hooks.register('register_group_permission_panel')
+@hooks.register("register_group_permission_panel")
 def register_video_permissions_panel():
     return GroupVideoPermissionFormSet
 
@@ -74,38 +72,49 @@ class VideoMenu(Menu):
     @property
     def registered_menu_items(self):
         return [
-            MenuItem(_('Manage videos'), reverse('wagtailvideos:index'),
-                     name='videos', classnames='icon icon-media', order=100),
+            MenuItem(
+                _("Manage videos"),
+                reverse("wagtailvideos:index"),
+                name="videos",
+                classnames="icon icon-media",
+                order=100,
+            ),
             TracksAdmin().get_menu_item(),
         ]
 
 
-@hooks.register('register_admin_menu_item')
+@hooks.register("register_admin_menu_item")
 def register_images_menu_item():
     if is_modeladmin_installed():
         return SubmenuMenuItem(
-            _('Videos'), VideoMenu(),
-            name='videos', classnames='icon icon-media', order=300
+            _("Videos"),
+            VideoMenu(),
+            name="videos",
+            classnames="icon icon-media",
+            order=300,
         )
     else:
         return MenuItem(
-            _('Videos'), reverse('wagtailvideos:index'),
-            name='videos', classnames='icon icon-media', order=300
+            _("Videos"),
+            reverse("wagtailvideos:index"),
+            name="videos",
+            classnames="icon icon-media",
+            order=300,
         )
 
 
-@hooks.register('construct_main_menu')
+@hooks.register("construct_main_menu")
 def hide_track_listing_main(request, menu_items):
     # Dumb but we need to remove the auto generated menu item because we add it to the video submenu
     if is_modeladmin_installed():
-        menu_items[:] = [item for item in menu_items if item.name != 'text-tracks']
+        menu_items[:] = [item for item in menu_items if item.name != "text-tracks"]
 
 
 class VideoSummaryItem(SummaryItem):
     order = 300
     template_name = "wagtailvideos/homepage/videos_summary.html"
 
-    def get_context_data(self):
+    def get_context_data(self, *args, **kwargs):
         return {
             "total_videos": Video.objects.count(),
         }
@@ -139,6 +148,9 @@ def register_media_search_area():
     )
 
 
-@hooks.register('insert_global_admin_css')
+@hooks.register("insert_global_admin_css")
 def summary_css():
-    return format_html('<link rel="stylesheet" href="{}">', static('wagtailvideos/css/summary-override.css'))
+    return format_html(
+        '<link rel="stylesheet" href="{}">',
+        static("wagtailvideos/css/summary-override.css"),
+    )
