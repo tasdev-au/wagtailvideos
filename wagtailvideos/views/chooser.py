@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
-from wagtail.core.models import Collection
+from wagtail.models import Collection
 from wagtail.search import index as search_index
 
 from wagtailvideos import get_video_model

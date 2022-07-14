@@ -11,7 +11,7 @@ from django.views.decorators.vary import vary_on_headers
 from wagtail.admin import messages
 from wagtail.admin.forms.search import SearchForm
 from wagtail.contrib.modeladmin.helpers import AdminURLHelper
-from wagtail.core.models import Collection
+from wagtail.models import Collection
 from wagtail.search.backends import get_search_backends
 
 from wagtailvideos import ffmpeg, get_video_model, is_modeladmin_installed

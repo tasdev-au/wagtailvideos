@@ -22,11 +22,11 @@ from enumchoicefield import ChoiceEnum, EnumChoiceField
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from taggit.managers import TaggableManager
-from wagtail.core.models import CollectionMember, Orderable
+from wagtail.models import CollectionMember, Orderable
 from wagtail.search import index
 from wagtail.search.queryset import SearchableQuerySetMixin
 
-if LooseVersion(wagtail.__version__) >= LooseVersion('2.7'):
+if LooseVersion(wagtail.__version__) >= LooseVersion("2.7"):
     from wagtail.admin.models import get_object_usage
 else:
     from wagtail.admin.utils import get_object_usage
@@ -35,34 +35,34 @@ logger = logging.getLogger(__name__)
 
 
 class VideoQuality(ChoiceEnum):
-    default = 'Default'
-    lowest = 'Low'
-    highest = 'High'
+    default = "Default"
+    lowest = "Low"
+    highest = "High"
 
 
 class MediaFormats(ChoiceEnum):
-    webm = 'VP8 and Vorbis in WebM'
-    mp4 = 'H.264 and AAC in Mp4'
-    ogg = 'Theora and Vorbis in Ogg'
+    webm = "VP8 and Vorbis in WebM"
+    mp4 = "H.264 and AAC in Mp4"
+    ogg = "Theora and Vorbis in Ogg"
 
     def get_quality_param(self, quality):
         if self is MediaFormats.webm:
             return {
-                VideoQuality.lowest: '50',
-                VideoQuality.default: '22',
-                VideoQuality.highest: '4'
+                VideoQuality.lowest: "50",
+                VideoQuality.default: "22",
+                VideoQuality.highest: "4",
             }[quality]
         elif self is MediaFormats.mp4:
             return {
-                VideoQuality.lowest: '28',
-                VideoQuality.default: '24',
-                VideoQuality.highest: '18'
+                VideoQuality.lowest: "28",
+                VideoQuality.default: "24",
+                VideoQuality.highest: "18",
             }[quality]
         elif self is MediaFormats.ogg:
             return {
-                VideoQuality.lowest: '5',
-                VideoQuality.default: '7',
-                VideoQuality.highest: '9'
+                VideoQuality.lowest: "5",
+                VideoQuality.default: "7",
+                VideoQuality.highest: "9",
             }[quality]
 
 
@@ -76,29 +76,37 @@ def get_upload_to(instance, filename):
 
 
 class AbstractVideo(CollectionMember, index.Indexed, models.Model):
-    title = models.CharField(max_length=255, verbose_name=_('title'))
-    file = models.FileField(
-        verbose_name=_('file'), upload_to=get_upload_to)
+    title = models.CharField(max_length=255, verbose_name=_("title"))
+    file = models.FileField(verbose_name=_("file"), upload_to=get_upload_to)
     thumbnail = models.ImageField(upload_to=get_upload_to, null=True, blank=True)
-    created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(
+        verbose_name=_("created at"), auto_now_add=True, db_index=True
+    )
     duration = models.DurationField(blank=True, null=True)
     uploaded_by_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('uploaded by user'),
-        null=True, blank=True, editable=False, on_delete=models.SET_NULL
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("uploaded by user"),
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.SET_NULL,
     )
 
-    tags = TaggableManager(help_text=None, blank=True, verbose_name=_('tags'))
+    tags = TaggableManager(help_text=None, blank=True, verbose_name=_("tags"))
 
     file_size = models.PositiveIntegerField(null=True, editable=False)
 
     objects = VideoQuerySet.as_manager()
 
     search_fields = list(CollectionMember.search_fields) + [
-        index.SearchField('title', partial_match=True, boost=10),
-        index.RelatedFields('tags', [
-            index.SearchField('name', partial_match=True, boost=10),
-        ]),
-        index.FilterField('uploaded_by_user'),
+        index.SearchField("title", partial_match=True, boost=10),
+        index.RelatedFields(
+            "tags",
+            [
+                index.SearchField("name", partial_match=True, boost=10),
+            ],
+        ),
+        index.FilterField("uploaded_by_user"),
     ]
 
     def __init__(self, *args, **kwargs):
@@ -113,14 +121,14 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
                 # File doesn't exist
                 return
 
-            self.save(update_fields=['file_size'])
+            self.save(update_fields=["file_size"])
 
         return self.file_size
 
     def get_upload_to(self, filename):
-        folder_name = 'original_videos'
+        folder_name = "original_videos"
         filename = self.file.field.storage.get_valid_name(filename)
-        max_length = self._meta.get_field('file').max_length
+        max_length = self._meta.get_field("file").max_length
 
         # Truncate filename so it fits in the 100 character limit
         # https://code.djangoproject.com/ticket/9893
@@ -129,7 +137,9 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
         if too_long > 0:
             head, ext = os.path.splitext(filename)
             if too_long > len(head) + 1:
-                raise SuspiciousFileOperation('File name can not be shortened to a safe length')
+                raise SuspiciousFileOperation(
+                    "File name can not be shortened to a safe length"
+                )
             filename = head[:-too_long] + ext
         return os.path.join(folder_name, filename)
 
@@ -138,7 +148,7 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
 
     @property
     def usage_url(self):
-        return reverse('wagtailvideos:video_usage', args=(self.id,))
+        return reverse("wagtailvideos:video_usage", args=(self.id,))
 
     @property
     def formatted_duration(self):
@@ -146,7 +156,7 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
             hours, remainder = divmod(self.duration.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             return "%d:%02d:%02d" % (hours, minutes, seconds)
-        return ''
+        return ""
 
     def __str__(self):
         return self.title
@@ -175,7 +185,8 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
 
     def is_editable_by_user(self, user):
         from wagtailvideos.permissions import permission_policy
-        return permission_policy.user_has_permission_for_instance(user, 'change', self)
+
+        return permission_policy.user_has_permission_for_instance(user, "change", self)
 
     @classmethod
     def get_transcode_model(cls):
@@ -186,11 +197,11 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
         return cls.track_listing.related.related_model
 
     def get_current_transcodes(self):
-        return self.transcodes.exclude(processing=True).filter(error_message__exact='')
+        return self.transcodes.exclude(processing=True).filter(error_message__exact="")
 
     def get_tracks(self):
         tracks = []
-        if hasattr(self, 'track_listing'):
+        if hasattr(self, "track_listing"):
             tracks = [t.track_tag() for t in self.track_listing.tracks.all()]
         return tracks
 
@@ -200,20 +211,30 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
         else:
             attrs = attrs.copy()
         if self.thumbnail:
-            attrs['poster'] = self.thumbnail.url
+            attrs["poster"] = self.thumbnail.url
 
         transcodes = self.get_current_transcodes()
         sources = []
         for transcode in transcodes:
-            sources.append("<source src='{0}' type='video/{1}' >".format(transcode.url, transcode.media_format.name))
+            sources.append(
+                "<source src='{0}' type='video/{1}' >".format(
+                    transcode.url, transcode.media_format.name
+                )
+            )
 
-        sources.append("<source src='{0}' type='{1}'>"
-                       .format(self.url, self.content_type))
+        sources.append(
+            "<source src='{0}' type='{1}'>".format(self.url, self.content_type)
+        )
 
-        sources.append("<p>Sorry, your browser doesn't support playback for this video</p>")
+        sources.append(
+            "<p>Sorry, your browser doesn't support playback for this video</p>"
+        )
 
         return mark_safe(
-            "<video {0}>\n{1}\n{2}\n</video>".format(flatatt(attrs), "\n".join(sources), "\n".join(self.get_tracks())))
+            "<video {0}>\n{1}\n{2}\n</video>".format(
+                flatatt(attrs), "\n".join(sources), "\n".join(self.get_tracks())
+            )
+        )
 
     def do_transcode(self, media_format, quality):
         transcode, created = self.transcodes.get_or_create(
@@ -221,11 +242,10 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
         )
         if created or transcode.processing is False:
             transcode.processing = True
-            transcode.error_messages = ''
+            transcode.error_messages = ""
             transcode.quality = quality
             # Lock the transcode model
-            transcode.save(update_fields=['processing', 'error_message',
-                                          'quality'])
+            transcode.save(update_fields=["processing", "error_message", "quality"])
             TranscodingThread(transcode).start()
         else:
             pass  # TODO Queue?
@@ -236,15 +256,15 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
 
 class Video(AbstractVideo):
     admin_form_fields = (
-        'title',
-        'file',
-        'collection',
-        'thumbnail',
-        'tags',
+        "title",
+        "file",
+        "collection",
+        "thumbnail",
+        "tags",
     )
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
 
 class TranscodingThread(threading.Thread):
@@ -258,40 +278,67 @@ class TranscodingThread(threading.Thread):
         input_file = video.file.path
         output_dir = tempfile.mkdtemp()
         transcode_name = "{0}.{1}".format(
-            video.filename(include_ext=False),
-            media_format.name)
+            video.filename(include_ext=False), media_format.name
+        )
 
         output_file = os.path.join(output_dir, transcode_name)
-        FNULL = open(os.devnull, 'r')
+        FNULL = open(os.devnull, "r")
         quality_param = media_format.get_quality_param(self.transcode.quality)
-        args = ['ffmpeg', '-hide_banner', '-i', input_file]
+        args = ["ffmpeg", "-hide_banner", "-i", input_file]
         try:
             if media_format is MediaFormats.ogg:
-                subprocess.check_output(args + [
-                    '-codec:v', 'libtheora',
-                    '-qscale:v', quality_param,
-                    '-codec:a', 'libvorbis',
-                    '-qscale:a', '5',
-                    output_file,
-                ], stdin=FNULL, stderr=subprocess.STDOUT)
+                subprocess.check_output(
+                    args
+                    + [
+                        "-codec:v",
+                        "libtheora",
+                        "-qscale:v",
+                        quality_param,
+                        "-codec:a",
+                        "libvorbis",
+                        "-qscale:a",
+                        "5",
+                        output_file,
+                    ],
+                    stdin=FNULL,
+                    stderr=subprocess.STDOUT,
+                )
             elif media_format is MediaFormats.mp4:
-                subprocess.check_output(args + [
-                    '-codec:v', 'libx264',
-                    '-preset', 'slow',  # TODO Checkout other presets
-                    '-crf', quality_param,
-                    '-codec:a', 'aac',
-                    output_file,
-                ], stdin=FNULL, stderr=subprocess.STDOUT)
+                subprocess.check_output(
+                    args
+                    + [
+                        "-codec:v",
+                        "libx264",
+                        "-preset",
+                        "slow",  # TODO Checkout other presets
+                        "-crf",
+                        quality_param,
+                        "-codec:a",
+                        "aac",
+                        output_file,
+                    ],
+                    stdin=FNULL,
+                    stderr=subprocess.STDOUT,
+                )
             elif media_format is MediaFormats.webm:
-                subprocess.check_output(args + [
-                    '-codec:v', 'libvpx',
-                    '-crf', quality_param,
-                    '-codec:a', 'libvorbis',
-                    output_file,
-                ], stdin=FNULL, stderr=subprocess.STDOUT)
+                subprocess.check_output(
+                    args
+                    + [
+                        "-codec:v",
+                        "libvpx",
+                        "-crf",
+                        quality_param,
+                        "-codec:a",
+                        "libvorbis",
+                        output_file,
+                    ],
+                    stdin=FNULL,
+                    stderr=subprocess.STDOUT,
+                )
             self.transcode.file = ContentFile(
-                open(output_file, 'rb').read(), transcode_name)
-            self.transcode.error_message = ''
+                open(output_file, "rb").read(), transcode_name
+            )
+            self.transcode.error_message = ""
         except subprocess.CalledProcessError as error:
             self.transcode.error_message = error.output
 
@@ -305,8 +352,9 @@ class AbstractVideoTranscode(models.Model):
     media_format = EnumChoiceField(MediaFormats)
     quality = EnumChoiceField(VideoQuality, default=VideoQuality.default)
     processing = models.BooleanField(default=False)
-    file = models.FileField(null=True, blank=True, verbose_name=_('file'),
-                            upload_to=get_upload_to)
+    file = models.FileField(
+        null=True, blank=True, verbose_name=_("file"), upload_to=get_upload_to
+    )
     error_message = models.TextField(blank=True)
 
     @property
@@ -314,7 +362,7 @@ class AbstractVideoTranscode(models.Model):
         return self.file.url
 
     def get_upload_to(self, filename):
-        folder_name = 'video_transcodes'
+        folder_name = "video_transcodes"
         filename = self.file.field.storage.get_valid_name(filename)
         return os.path.join(folder_name, filename)
 
@@ -323,10 +371,12 @@ class AbstractVideoTranscode(models.Model):
 
 
 class VideoTranscode(AbstractVideoTranscode):
-    video = models.ForeignKey(Video, related_name='transcodes', on_delete=models.CASCADE)
+    video = models.ForeignKey(
+        Video, related_name="transcodes", on_delete=models.CASCADE
+    )
 
     class Meta:
-        unique_together = ('video', 'media_format')
+        unique_together = ("video", "media_format")
 
 
 class AbstractTrackListing(ClusterableModel):
@@ -343,54 +393,60 @@ class AbstractTrackListing(ClusterableModel):
 
 class TrackListing(AbstractTrackListing):
     video = models.OneToOneField(
-        Video, on_delete=models.CASCADE,
-        related_name='track_listing')
+        Video, on_delete=models.CASCADE, related_name="track_listing"
+    )
 
 
 class AbstractVideoTrack(Orderable):
     # TODO move to TextChoices once django < 3 is dropped
     track_kinds = [
-        ('subtitles', 'Subtitles'),
-        ('captions', 'Captions'),
-        ('descriptions', 'Descriptions'),
-        ('chapters', 'Chapters'),
-        ('metadata', 'Metadata'),
+        ("subtitles", "Subtitles"),
+        ("captions", "Captions"),
+        ("descriptions", "Descriptions"),
+        ("chapters", "Chapters"),
+        ("metadata", "Metadata"),
     ]
 
-    file = models.FileField(
-        verbose_name=_('file'),
-        upload_to=get_upload_to
+    file = models.FileField(verbose_name=_("file"), upload_to=get_upload_to)
+    kind = models.CharField(
+        max_length=50, choices=track_kinds, default=track_kinds[0][0]
     )
-    kind = models.CharField(max_length=50, choices=track_kinds, default=track_kinds[0][0])
     label = models.CharField(
-        max_length=255, blank=True,
-        help_text='A user-readable title of the text track.')
+        max_length=255, blank=True, help_text="A user-readable title of the text track."
+    )
     language = models.CharField(
         max_length=50,
         choices=[(v, k) for k, v in bcp47.languages.items()],
-        default='en', blank=True, help_text='Required if type is "Subtitle"')
+        default="en",
+        blank=True,
+        help_text='Required if type is "Subtitle"',
+    )
 
     def track_tag(self):
         attrs = {
-            'kind': self.kind,
-            'src': self.url,
+            "kind": self.kind,
+            "src": self.url,
         }
         if self.label:
-            attrs['label'] = self.label
+            attrs["label"] = self.label
         if self.language:
-            attrs['srclang'] = self.language
+            attrs["srclang"] = self.language
 
-        return "<track {0}{1}>".format(flatatt(attrs), ' default' if self.sort_order == 0 else '')
+        return "<track {0}{1}>".format(
+            flatatt(attrs), " default" if self.sort_order == 0 else ""
+        )
 
     def __str__(self):
-        return "{0} - {1}".format(self.label or self.get_kind_display(), self.get_language_display())
+        return "{0} - {1}".format(
+            self.label or self.get_kind_display(), self.get_language_display()
+        )
 
     @property
     def url(self):
         return self.file.url
 
     def get_upload_to(self, filename):
-        folder_name = 'video_tracks'
+        folder_name = "video_tracks"
         filename = self.file.field.storage.get_valid_name(filename)
         return os.path.join(folder_name, filename)
 
@@ -399,4 +455,4 @@ class AbstractVideoTrack(Orderable):
 
 
 class VideoTrack(AbstractVideoTrack):
-    listing = ParentalKey(TrackListing, related_name='tracks', on_delete=models.CASCADE)
+    listing = ParentalKey(TrackListing, related_name="tracks", on_delete=models.CASCADE)

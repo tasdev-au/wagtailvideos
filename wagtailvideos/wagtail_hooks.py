@@ -3,12 +3,12 @@ from django.templatetags.static import static
 from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from wagtail.admin.edit_handlers import InlinePanel
+from wagtail.admin.panels import InlinePanel
 from wagtail.admin.menu import Menu, MenuItem, SubmenuMenuItem
 from wagtail.admin.search import SearchArea
 from wagtail.admin.site_summary import SummaryItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
-from wagtail.core import hooks
+from wagtail import hooks
 
 from wagtailvideos import get_video_model, is_modeladmin_installed, urls
 from wagtailvideos.edit_handlers import VideoChooserPanel

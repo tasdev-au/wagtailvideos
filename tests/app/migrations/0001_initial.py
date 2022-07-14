@@ -6,8 +6,8 @@ import django.db.models.deletion
 import enumchoicefield.fields
 import modelcluster.fields
 import taggit.managers
-import wagtail.core.fields
-import wagtail.core.models
+import wagtail.fields
+import wagtail.models
 import wagtail.search.index
 import wagtailvideos.blocks
 import wagtailvideos.models
@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                 ('duration', models.DurationField(blank=True, null=True)),
                 ('file_size', models.PositiveIntegerField(editable=False, null=True)),
                 ('attribution', models.TextField(blank=True)),
-                ('collection', models.ForeignKey(default=wagtail.core.models.get_root_collection_id, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='wagtailcore.Collection', verbose_name='collection')),
+                ('collection', models.ForeignKey(default=wagtail.models.get_root_collection_id, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='wagtailcore.Collection', verbose_name='collection')),
                 ('tags', taggit.managers.TaggableManager(blank=True, help_text=None, through='taggit.TaggedItem', to='taggit.Tag', verbose_name='tags')),
                 ('uploaded_by_user', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL, verbose_name='uploaded by user')),
             ],
@@ -57,7 +57,7 @@ class Migration(migrations.Migration):
             name='TestPage',
             fields=[
                 ('page_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='wagtailcore.Page')),
-                ('video_streamfield', wagtail.core.fields.StreamField([('video', wagtailvideos.blocks.VideoChooserBlock())], blank=True)),
+                ('video_streamfield', wagtail.fields.StreamField([('video', wagtailvideos.blocks.VideoChooserBlock())], blank=True)),
                 ('video_field', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='app.CustomVideoModel')),
             ],
             options={

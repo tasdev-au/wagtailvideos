@@ -1,8 +1,8 @@
 from django.db import models
 from modelcluster.fields import ParentalKey
-from wagtail.admin.edit_handlers import StreamFieldPanel
-from wagtail.core.fields import StreamField
-from wagtail.core.models import Page
+from wagtail.admin.panels import StreamFieldPanel
+from wagtail.fields import StreamField
+from wagtail.models import Page
 
 from wagtailvideos.blocks import VideoChooserBlock
 from wagtailvideos.edit_handlers import VideoChooserPanel
