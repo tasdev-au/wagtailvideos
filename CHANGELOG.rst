@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+2.11.1
+------
+
+- Added collection dropdown to chooser
+
 2.11.0
 ------
 
